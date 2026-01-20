@@ -1,1 +1,161 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>旅行費用捻出アプリ</title>
+  <meta name="theme-color" content="#0f172a" />
+
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+    }
+    .container {
+      padding: 16px;
+      max-width: 420px;
+      margin: auto;
+    }
+    h1 { font-size: 20px; margin-bottom: 12px; }
+    h2 { font-size: 16px; margin-bottom: 8px; }
+    .card {
+      background: #020617;
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    label { font-size: 12px; opacity: 0.8; }
+    input, select {
+      width: 100%;
+      padding: 8px;
+      margin-top: 4px;
+      margin-bottom: 8px;
+      border-radius: 8px;
+      border: 1px solid #334155;
+      background: #020617;
+      color: #e5e7eb;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      border-radius: 10px;
+      border: none;
+      background: #2563eb;
+      color: white;
+      font-size: 14px;
+      margin-top: 6px;
+    }
+    .trip {
+      border-top: 1px solid #334155;
+      padding-top: 8px;
+      margin-top: 8px;
+    }
+    .small { font-size: 12px; opacity: 0.8; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>✈️ 旅行費用 捻出アプリ</h1>
+
+  <div class="card">
+    <h2>旅行を追加</h2>
+    <label>旅行名</label>
+    <input id="destination" placeholder="例：9月 デリー" />
+
+    <label>目標金額（円）</label>
+    <input id="target" type="number" />
+
+    <label>現在の積立額（円）</label>
+    <input id="current" type="number" value="0" />
+
+    <label>旅行月（YYYY-MM）</label>
+    <input id="month" type="month" />
+
+    <label>今月多めに積み立てる（円・任意）</label>
+    <input id="extra" type="number" value="0" />
+
+    <button onclick="addTrip()">追加</button>
+  </div>
+
+  <div class="card">
+    <h2>今月の合計捻出額</h2>
+    <div id="total" class="small"></div>
+  </div>
+
+  <div class="card">
+    <h2>旅行一覧</h2>
+    <div id="list"></div>
+  </div>
+</div>
+</div>
+
+<script>
+let trips = JSON.parse(localStorage.getItem('trips')) || [];
+
+function addTrip() {
+  trips.push({
+    destination: destination.value,
+    target: Number(target.value),
+    current: Number(current.value),
+    month: month.value,
+    extra: Number(extra.value)
+  });
+  localStorage.setItem('trips', JSON.stringify(trips));
+  destination.value = target.value = month.value = '';
+  current.value = extra.value = 0;
+  render();
+}
+
+function completeTrip(index) {
+  trips.splice(index, 1);
+  localStorage.setItem('trips', JSON.stringify(trips));
+  render();
+}
+
+function render() {
+  list.innerHTML = '';
+  const now = new Date();
+  let totalThisMonth = 0;
+
+  trips.forEach((t, index) => {((t) => {
+    const tripDate = new Date(t.month + '-01');
+    const monthsLeft = Math.max(1, (tripDate.getFullYear() - now.getFullYear()) * 12 + (tripDate.getMonth() - now.getMonth()));
+    const remaining = t.target - t.current - t.extra;
+    const perMonth = Math.ceil(Math.max(0, remaining) / monthsLeft);
+
+    totalThisMonth += perMonth + t.extra;
+
+    const div = document.createElement('div');
+    div.className = 'trip';
+    div.innerHTML = `
+      <strong>${t.destination}</strong><br>
+      目標：¥${t.target.toLocaleString()} / 現在：¥${t.current.toLocaleString()}<br>
+      今月上乗せ：¥${t.extra.toLocaleString()}<br>
+      残り：約 ${monthsLeft} ヶ月<br>
+      今後の月：¥${perMonth.toLocaleString()} / 月<br>
+      <button onclick="completeTrip(${index})">旅行完了</button>
+      <div class="small">※ 完了すると今月計算から除外</div>
+    `;
+    list.appendChild(div);
+  });
+
+  total.innerHTML = `👉 今月まとめて <strong>¥${totalThisMonth.toLocaleString()}</strong> 捻出すればOK`;
+}</strong><br>
+      目標：¥${t.target.toLocaleString()} / 現在：¥${t.current.toLocaleString()}<br>
+      今月上乗せ：¥${t.extra.toLocaleString()}<br>
+      残り：約 ${monthsLeft} ヶ月<br>
+      今後の月：¥${perMonth.toLocaleString()} / 月
+      <div class="small">※ 今月多めに積んだ分は自動考慮</div>
+    `;
+    list.appendChild(div);
+  });
+}
+
+render();
+</script>
+</body>
+</html>
+
 
